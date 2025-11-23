@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { login, logout } from "@/features/auth/actions";
+import { login, loginGithub, logout } from "@/features/auth/actions";
 
 export default async function Home() {
   const session = await auth();
@@ -40,14 +40,24 @@ export default async function Home() {
                 <p className="text-lg text-zinc-600 dark:text-zinc-400">
                   ログインしていません
                 </p>
-                <form action={login}>
-                  <button
-                    type="submit"
-                    className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                  >
-                    Googleでログイン
-                  </button>
-                </form>
+                <div className="flex flex-col gap-3">
+                  <form action={login}>
+                    <button
+                      type="submit"
+                      className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    >
+                      Googleでログイン
+                    </button>
+                  </form>
+                  <form action={loginGithub}>
+                    <button
+                      type="submit"
+                      className="px-6 py-2 bg-gray-800 text-white rounded hover:bg-gray-900"
+                    >
+                      GitHubでログイン
+                    </button>
+                  </form>
+                </div>
               </>
             )}
           </div>
