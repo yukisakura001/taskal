@@ -50,3 +50,22 @@ export const sessions = pgTable("sessions", {
     .references(() => users.id, { onDelete: "cascade" }),
   expires: timestamp("expires", { mode: "date" }).notNull(),
 });
+
+export const tasks = pgTable("tasks", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  createdAt: timestamp("created_at", { mode: "date" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+  deadLine: text("deadline").notNull(),
+  time: integer("time").notNull(),
+  condition: text("condition"),
+  status: text("status").notNull(),
+  type: text("type").notNull(),
+  priority: text("priority").notNull(),
+});

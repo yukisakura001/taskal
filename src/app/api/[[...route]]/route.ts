@@ -1,8 +1,7 @@
 import { Hono } from "hono";
 import { handle } from "hono/vercel";
-import user from "./user";
 
-const app = new Hono().basePath("/api").route("/user", user);
+const app = new Hono().basePath("/api");
 
 export const GET = handle(app);
 export const POST = handle(app);
