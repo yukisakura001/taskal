@@ -167,10 +167,10 @@ export default function TaskManagement() {
           key={group.date}
           className="bg-white rounded-lg border border-gray-300 overflow-hidden"
         >
-          <div className="flex items-center justify-between gap-2 px-4 py-2.5 bg-orange-100 border-b border-orange-300">
+          <div className="flex items-center gap-3 px-4 py-2.5 bg-orange-100 border-b border-orange-300">
             <h2 className="text-base font-bold text-gray-700">{group.date}</h2>
-            <span className="text-sm font-semibold text-gray-600">
-              合計 {group.totalTime}h
+            <span className="text-base font-bold text-orange-700">
+              {group.totalTime}h
             </span>
           </div>
           <div className="p-3 space-y-2">
