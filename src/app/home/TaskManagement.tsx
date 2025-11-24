@@ -7,6 +7,16 @@ import TaskView from "./TaskView";
 import { Task } from "./taskSchema";
 import { groupTasksByDate } from "./groupTasks";
 import { getManagementTasks, updateTask, deleteTask } from "./actions";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { getInProgressLimitError } from "./taskValidation";
 
 export default function TaskManagement() {
   const queryClient = useQueryClient();
@@ -15,6 +25,8 @@ export default function TaskManagement() {
     "仕掛中",
     "休止中",
   ]);
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
 
   const { data: tasks = [], isLoading } = useQuery({
     queryKey: ["managementTasks"],
@@ -37,16 +49,12 @@ export default function TaskManagement() {
   });
 
   const handleUpdateTask = async (task: Task) => {
-    // 仕掛中に変更しようとしている場合、既存の仕掛中タスク数をチェック
+    // 仕掛中に変更しようとしている場合、制限をチェック
     if (task.status === "仕掛中") {
-      const inProgressCount = tasks.filter(
-        (t) => t.status === "仕掛中" && t.id !== task.id
-      ).length;
-
-      if (inProgressCount >= 2) {
-        alert(
-          "仕掛中のタスクが既に2個以上あります。\n他のタスクを完了または休止してから変更してください。"
-        );
+      const errorMessage = getInProgressLimitError(tasks, task.id);
+      if (errorMessage) {
+        setAlertMessage(errorMessage);
+        setShowAlert(true);
         return;
       }
     }
@@ -101,8 +109,25 @@ export default function TaskManagement() {
   }
 
   return (
-    <div className="space-y-3">
-      <div className="bg-white rounded-lg border border-gray-300 p-3">
+    <>
+      <AlertDialog open={showAlert} onOpenChange={setShowAlert}>
+        <AlertDialogContent className="bg-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle>仕掛中タスクの上限に達しています</AlertDialogTitle>
+            <AlertDialogDescription className="whitespace-pre-line">
+              {alertMessage}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowAlert(false)}>
+              OK
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <div className="space-y-3">
+        <div className="bg-white rounded-lg border border-gray-300 p-3">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-semibold text-gray-700">
             ステータスフィルター
@@ -180,11 +205,13 @@ export default function TaskManagement() {
                 task={task}
                 onUpdate={handleUpdateTask}
                 onDelete={handleDeleteTask}
+                currentTasks={tasks}
               />
             ))}
           </div>
         </div>
       ))}
-    </div>
+      </div>
+    </>
   );
 }

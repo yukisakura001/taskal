@@ -11,12 +11,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { getInProgressLimitError } from "./taskValidation";
 
 type TaskViewProps = {
   task: Task;
   onUpdate: (task: Task) => void;
   onDelete: (taskId: string) => void;
   readOnly?: boolean;
+  currentTasks: Task[];
 };
 
 const statusColors = {
@@ -56,10 +67,23 @@ export default function TaskView({
   onUpdate,
   onDelete,
   readOnly = false,
+  currentTasks,
 }: TaskViewProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
 
   const handleStatusChange = (newStatus: Task["status"]) => {
+    // 仕掛中に変更しようとしている場合、制限をチェック
+    if (newStatus === "仕掛中") {
+      const errorMessage = getInProgressLimitError(currentTasks, task.id);
+      if (errorMessage) {
+        setAlertMessage(errorMessage);
+        setShowAlert(true);
+        return;
+      }
+    }
+
     onUpdate({ ...task, status: newStatus });
   };
 
@@ -81,6 +105,22 @@ export default function TaskView({
 
   return (
     <>
+      <AlertDialog open={showAlert} onOpenChange={setShowAlert}>
+        <AlertDialogContent className="bg-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle>仕掛中タスクの上限に達しています</AlertDialogTitle>
+            <AlertDialogDescription className="whitespace-pre-line">
+              {alertMessage}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowAlert(false)}>
+              OK
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <Card
         className={`p-1.5 ${cardStatusColors[task.status]} ${
           readOnly ? "cursor-default" : "cursor-pointer"
@@ -144,6 +184,7 @@ export default function TaskView({
           onOpenChange={setIsModalOpen}
           onSave={onUpdate}
           onDelete={onDelete}
+          currentTasks={currentTasks}
         />
       )}
     </>

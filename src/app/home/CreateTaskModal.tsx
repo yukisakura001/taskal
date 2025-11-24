@@ -17,13 +17,24 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { TaskInput, taskSchema } from "./taskSchema";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Task, TaskInput, taskSchema } from "./taskSchema";
 import { useState } from "react";
+import { getInProgressLimitError } from "./taskValidation";
 
 type CreateTaskModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (task: TaskInput) => void;
+  currentTasks: Task[];
 };
 
 const getEmptyTask = (): TaskInput => ({
@@ -40,9 +51,12 @@ export default function CreateTaskModal({
   open,
   onOpenChange,
   onSave,
+  currentTasks,
 }: CreateTaskModalProps) {
   const [editedTask, setEditedTask] = useState<TaskInput>(getEmptyTask());
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
 
   const handleSave = () => {
     const result = taskSchema.safeParse(editedTask);
@@ -58,6 +72,16 @@ export default function CreateTaskModal({
       return;
     }
 
+    // 仕掛中に設定しようとしている場合、制限をチェック
+    if (result.data.status === "仕掛中") {
+      const errorMessage = getInProgressLimitError(currentTasks);
+      if (errorMessage) {
+        setAlertMessage(errorMessage);
+        setShowAlert(true);
+        return;
+      }
+    }
+
     onSave(result.data);
     setEditedTask(getEmptyTask());
     setErrors({});
@@ -71,11 +95,28 @@ export default function CreateTaskModal({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl bg-white">
-        <DialogHeader>
-          <DialogTitle>タスク作成</DialogTitle>
-        </DialogHeader>
+    <>
+      <AlertDialog open={showAlert} onOpenChange={setShowAlert}>
+        <AlertDialogContent className="bg-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle>仕掛中タスクの上限に達しています</AlertDialogTitle>
+            <AlertDialogDescription className="whitespace-pre-line">
+              {alertMessage}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowAlert(false)}>
+              OK
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-2xl bg-white">
+          <DialogHeader>
+            <DialogTitle>タスク作成</DialogTitle>
+          </DialogHeader>
 
         <div className="space-y-4">
           <div>
@@ -222,5 +263,6 @@ export default function CreateTaskModal({
         </div>
       </DialogContent>
     </Dialog>
+    </>
   );
 }

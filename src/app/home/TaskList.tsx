@@ -1,19 +1,25 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { ListTodo, CheckCircle } from "lucide-react";
 import CreateTaskModal from "./CreateTaskModal";
 import TaskManagement from "./TaskManagement";
 import CompletedTasksView from "./CompletedTasksView";
 import { TaskInput } from "./taskSchema";
-import { createTask } from "./actions";
+import { createTask, getManagementTasks } from "./actions";
 
 export default function TaskList() {
   const [viewMode, setViewMode] = useState<"management" | "completed">("management");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const queryClient = useQueryClient();
+
+  // 未完了タスクを取得（仕掛中制限のチェックに必要）
+  const { data: managementTasks = [] } = useQuery({
+    queryKey: ["managementTasks"],
+    queryFn: getManagementTasks,
+  });
 
   const createMutation = useMutation({
     mutationFn: (taskInput: TaskInput) => createTask(taskInput),
@@ -75,6 +81,7 @@ export default function TaskList() {
         open={isCreateModalOpen}
         onOpenChange={setIsCreateModalOpen}
         onSave={handleCreateTask}
+        currentTasks={managementTasks}
       />
     </div>
   );

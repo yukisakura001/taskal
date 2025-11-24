@@ -11,7 +11,18 @@ import {
   getCompletedTasksByDateRange,
   updateTask,
   deleteTask,
+  getManagementTasks,
 } from "./actions";
+import { getInProgressLimitError } from "./taskValidation";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 function formatDate(date: Date): string {
   const year = date.getFullYear();
@@ -35,12 +46,20 @@ function getInitialDateRange() {
 export default function CompletedTasksView() {
   const queryClient = useQueryClient();
   const [dateRange, setDateRange] = useState(getInitialDateRange());
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
 
   const { data: tasks = [], isLoading } = useQuery({
     queryKey: ["completedTasks", dateRange.startDate, dateRange.endDate],
     queryFn: () =>
       getCompletedTasksByDateRange(dateRange.startDate, dateRange.endDate),
     staleTime: 30 * 1000, // 30秒間はキャッシュを利用
+  });
+
+  // 未完了タスクを取得（仕掛中制限のチェックに必要）
+  const { data: managementTasks = [] } = useQuery({
+    queryKey: ["managementTasks"],
+    queryFn: getManagementTasks,
   });
 
   const updateMutation = useMutation({
@@ -63,6 +82,16 @@ export default function CompletedTasksView() {
   });
 
   const handleUpdateTask = async (task: Task) => {
+    // 仕掛中に変更しようとしている場合、制限をチェック
+    if (task.status === "仕掛中") {
+      const errorMessage = getInProgressLimitError(managementTasks, task.id);
+      if (errorMessage) {
+        setAlertMessage(errorMessage);
+        setShowAlert(true);
+        return;
+      }
+    }
+
     try {
       await updateMutation.mutateAsync({ id: task.id, task });
     } catch (error) {
@@ -113,8 +142,25 @@ export default function CompletedTasksView() {
   }
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-center gap-2">
+    <>
+      <AlertDialog open={showAlert} onOpenChange={setShowAlert}>
+        <AlertDialogContent className="bg-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle>仕掛中タスクの上限に達しています</AlertDialogTitle>
+            <AlertDialogDescription className="whitespace-pre-line">
+              {alertMessage}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowAlert(false)}>
+              OK
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <div className="space-y-3">
+        <div className="flex items-center justify-center gap-2">
         <Button onClick={handlePrevPeriod} size="sm" variant="outline">
           <ChevronLeft className="h-4 w-4" />
         </Button>
@@ -154,12 +200,14 @@ export default function CompletedTasksView() {
                   onUpdate={handleUpdateTask}
                   onDelete={handleDeleteTask}
                   readOnly={true}
+                  currentTasks={managementTasks}
                 />
               ))}
             </div>
           </div>
         ))
       )}
-    </div>
+      </div>
+    </>
   );
 }

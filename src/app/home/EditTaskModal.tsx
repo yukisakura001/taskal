@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Task, TaskInput, taskSchema } from "./taskSchema";
 import { useState } from "react";
+import { getInProgressLimitError } from "./taskValidation";
 
 type EditTaskModalProps = {
   task: Task;
@@ -37,6 +38,7 @@ type EditTaskModalProps = {
   onOpenChange: (open: boolean) => void;
   onSave: (task: Task) => void;
   onDelete: (taskId: string) => void;
+  currentTasks: Task[];
 };
 
 export default function EditTaskModal({
@@ -45,9 +47,12 @@ export default function EditTaskModal({
   onOpenChange,
   onSave,
   onDelete,
+  currentTasks,
 }: EditTaskModalProps) {
   const [editedTask, setEditedTask] = useState<TaskInput>(task);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showLimitAlert, setShowLimitAlert] = useState(false);
+  const [limitAlertMessage, setLimitAlertMessage] = useState("");
 
   const handleSave = () => {
     const result = taskSchema.safeParse(editedTask);
@@ -63,6 +68,16 @@ export default function EditTaskModal({
       return;
     }
 
+    // 仕掛中に変更しようとしている場合、制限をチェック
+    if (result.data.status === "仕掛中") {
+      const errorMessage = getInProgressLimitError(currentTasks, task.id);
+      if (errorMessage) {
+        setLimitAlertMessage(errorMessage);
+        setShowLimitAlert(true);
+        return;
+      }
+    }
+
     onSave({ ...result.data, id: task.id });
     onOpenChange(false);
   };
@@ -73,11 +88,28 @@ export default function EditTaskModal({
   };
 
   return (
-    <Dialog key={task.id} open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl bg-white">
-        <DialogHeader>
-          <DialogTitle>タスク編集</DialogTitle>
-        </DialogHeader>
+    <>
+      <AlertDialog open={showLimitAlert} onOpenChange={setShowLimitAlert}>
+        <AlertDialogContent className="bg-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle>仕掛中タスクの上限に達しています</AlertDialogTitle>
+            <AlertDialogDescription className="whitespace-pre-line">
+              {limitAlertMessage}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowLimitAlert(false)}>
+              OK
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <Dialog key={task.id} open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-2xl bg-white">
+          <DialogHeader>
+            <DialogTitle>タスク編集</DialogTitle>
+          </DialogHeader>
 
         <div className="space-y-4">
           <div>
@@ -246,5 +278,6 @@ export default function EditTaskModal({
         </div>
       </DialogContent>
     </Dialog>
+    </>
   );
 }
