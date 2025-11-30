@@ -15,6 +15,27 @@
       "when": 1763901537574,
       "tag": "0001_fancy_night_nurse",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1764407858493,
+      "tag": "0002_daffy_skaar",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1764413669251,
+      "tag": "0003_light_trish_tilby",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1764474459456,
+      "tag": "0004_quiet_black_widow",
+      "breakpoints": true
     }
   ]
 }

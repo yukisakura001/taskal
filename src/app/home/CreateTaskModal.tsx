@@ -29,6 +29,8 @@ import {
 import { Task, TaskInput, taskSchema } from "./taskSchema";
 import { useState } from "react";
 import { getInProgressLimitError } from "./taskValidation";
+import { useQuery } from "@tanstack/react-query";
+import { getProjects } from "../project/actions";
 
 type CreateTaskModalProps = {
   open: boolean;
@@ -45,6 +47,7 @@ const getEmptyTask = (): TaskInput => ({
   status: "未着手",
   type: "一般",
   priority: "今すぐ",
+  project: undefined,
 });
 
 export default function CreateTaskModal({
@@ -57,6 +60,12 @@ export default function CreateTaskModal({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
+
+  const { data: projects = [] } = useQuery({
+    queryKey: ["projects"],
+    queryFn: getProjects,
+    enabled: open, // モーダルが開いているときだけクエリを実行
+  });
 
   const handleSave = () => {
     const result = taskSchema.safeParse(editedTask);
@@ -156,11 +165,13 @@ export default function CreateTaskModal({
                     time: Number(value) as TaskInput["time"],
                   })
                 }
+                disabled={editedTask.type === "15分タスク"}
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-white">
+                  <SelectItem value="0.2">0.2</SelectItem>
                   <SelectItem value="0.5">0.5</SelectItem>
                   <SelectItem value="1">1</SelectItem>
                   <SelectItem value="2">2</SelectItem>
@@ -200,12 +211,14 @@ export default function CreateTaskModal({
               <Label>タスク種類</Label>
               <Select
                 value={editedTask.type}
-                onValueChange={(value) =>
+                onValueChange={(value) => {
+                  const newType = value as TaskInput["type"];
                   setEditedTask({
                     ...editedTask,
-                    type: value as TaskInput["type"],
-                  })
-                }
+                    type: newType,
+                    time: newType === "15分タスク" ? 0.2 : editedTask.time,
+                  });
+                }}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -238,6 +251,31 @@ export default function CreateTaskModal({
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div>
+            <Label>プロジェクト（任意）</Label>
+            <Select
+              value={editedTask.project || "__none__"}
+              onValueChange={(value) =>
+                setEditedTask({
+                  ...editedTask,
+                  project: value === "__none__" ? undefined : value,
+                })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="プロジェクトを選択" />
+              </SelectTrigger>
+              <SelectContent className="bg-white">
+                <SelectItem value="__none__">なし</SelectItem>
+                {projects.map((project) => (
+                  <SelectItem key={project.id} value={project.id}>
+                    {project.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div>

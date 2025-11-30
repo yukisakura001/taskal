@@ -1,0 +1,1 @@
+ALTER TABLE "tasks" ALTER COLUMN "time" SET DATA TYPE real;

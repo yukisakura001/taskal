@@ -1,7 +1,18 @@
 import { Task } from "./taskSchema";
 
+// 日付文字列から曜日を取得する関数
+function getDayOfWeek(dateString: string): string {
+  const days = ["日", "月", "火", "水", "木", "金", "土"];
+  // YYYY-MM-DD形式の日付文字列をパースする際、タイムゾーンの影響を受けないように
+  // 年、月、日を個別に取得して新しいDateオブジェクトを作成
+  const [year, month, day] = dateString.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
+  return days[date.getDay()];
+}
+
 export type GroupedTasks = {
   date: string;
+  dayOfWeek: string;
   tasks: Task[];
   totalTime: number;
 };
@@ -44,6 +55,7 @@ export function groupTasksByDate(tasks: Task[]): GroupedTasks[] {
 
       return {
         date,
+        dayOfWeek: getDayOfWeek(date),
         tasks: sortedTasks,
         totalTime: tasks.reduce((sum, task) => sum + task.time, 0),
       };

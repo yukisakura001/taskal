@@ -1,0 +1,1 @@
+ALTER TABLE "tasks" ADD COLUMN "deleted" integer DEFAULT 0 NOT NULL;

@@ -29,8 +29,10 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Task, TaskInput, taskSchema } from "./taskSchema";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { getInProgressLimitError } from "./taskValidation";
+import { useQuery } from "@tanstack/react-query";
+import { getProjects } from "../project/actions";
 
 type EditTaskModalProps = {
   task: Task;
@@ -53,6 +55,34 @@ export default function EditTaskModal({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showLimitAlert, setShowLimitAlert] = useState(false);
   const [limitAlertMessage, setLimitAlertMessage] = useState("");
+  const [mounted, setMounted] = useState(false);
+
+  const { data: projects = [] } = useQuery({
+    queryKey: ["projects"],
+    queryFn: getProjects,
+    enabled: open, // モーダルが開いているときだけクエリを実行
+  });
+
+  // クライアント側でのみレンダリング
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // モーダルが開かれるたびにタスクの値を更新
+  useEffect(() => {
+    if (open) {
+      setEditedTask({
+        ...task,
+        project: task.project || undefined, // nullをundefinedに統一
+      });
+      setErrors({});
+    }
+  }, [open, task]);
+
+  // ハイドレーションエラーを防ぐため、クライアント側でマウントされるまで何も表示しない
+  if (!mounted) {
+    return null;
+  }
 
   const handleSave = () => {
     const result = taskSchema.safeParse(editedTask);
@@ -149,11 +179,13 @@ export default function EditTaskModal({
                     time: Number(value) as TaskInput["time"],
                   })
                 }
+                disabled={editedTask.type === "15分タスク"}
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-white">
+                  <SelectItem value="0.2">0.2</SelectItem>
                   <SelectItem value="0.5">0.5</SelectItem>
                   <SelectItem value="1">1</SelectItem>
                   <SelectItem value="2">2</SelectItem>
@@ -193,9 +225,14 @@ export default function EditTaskModal({
               <Label>タスク種類</Label>
               <Select
                 value={editedTask.type}
-                onValueChange={(value) =>
-                  setEditedTask({ ...editedTask, type: value as Task["type"] })
-                }
+                onValueChange={(value) => {
+                  const newType = value as Task["type"];
+                  setEditedTask({
+                    ...editedTask,
+                    type: newType,
+                    time: newType === "15分タスク" ? 0.2 : editedTask.time,
+                  });
+                }}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -228,6 +265,31 @@ export default function EditTaskModal({
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div>
+            <Label>プロジェクト（任意）</Label>
+            <Select
+              value={editedTask.project || "__none__"}
+              onValueChange={(value) =>
+                setEditedTask({
+                  ...editedTask,
+                  project: value === "__none__" ? undefined : value,
+                })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="プロジェクトを選択" />
+              </SelectTrigger>
+              <SelectContent className="bg-white">
+                <SelectItem value="__none__">なし</SelectItem>
+                {projects.map((project) => (
+                  <SelectItem key={project.id} value={project.id}>
+                    {project.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div>

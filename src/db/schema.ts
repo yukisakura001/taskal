@@ -4,6 +4,7 @@ import {
   text,
   primaryKey,
   integer,
+  real,
 } from "drizzle-orm/pg-core";
 import type { AdapterAccountType } from "next-auth/adapters";
 
@@ -63,9 +64,27 @@ export const tasks = pgTable("tasks", {
     .notNull()
     .$defaultFn(() => new Date()),
   deadLine: text("deadline").notNull(),
-  time: integer("time").notNull(),
+  time: real("time").notNull(),
   condition: text("condition"),
   status: text("status").notNull(),
   type: text("type").notNull(),
   priority: text("priority").notNull(),
+  deleted: integer("deleted").notNull().default(0),
+  project: text("project").references(() => pj.id, { onDelete: "set null" }),
+});
+
+export const pj = pgTable("pj", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  createdAt: timestamp("created_at", { mode: "date" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+  goal: text("goal").notNull(),
+  deadLine: text("deadline").notNull(),
+  status: text("status").notNull(),
 });

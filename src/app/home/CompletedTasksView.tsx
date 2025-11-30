@@ -186,7 +186,7 @@ export default function CompletedTasksView() {
           >
             <div className="flex items-center gap-3 px-4 py-2.5 bg-orange-100 border-b border-orange-300">
               <h2 className="text-base font-bold text-gray-700">
-                {group.date}
+                {group.date}({group.dayOfWeek})
               </h2>
               <span className="text-base font-bold text-orange-700">
                 {group.totalTime}h
