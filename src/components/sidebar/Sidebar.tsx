@@ -1,21 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { Home, Menu, X, Trash2, FolderKanban, Calendar } from "lucide-react";
-import { useState } from "react";
+import { Home, Trash2, FolderKanban, Calendar } from "lucide-react";
+import { useSidebar } from "@/contexts/SidebarContext";
 
 export default function Sidebar() {
-  const [isOpen, setIsOpen] = useState(false);
+  const { isOpen, setIsOpen } = useSidebar();
 
   return (
     <>
-      {/* ハンバーガーメニューボタン（モバイルのみ） */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-20 left-4 z-40 p-2 bg-white border border-gray-300 rounded-lg md:hidden"
-      >
-        {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-      </button>
 
       {/* オーバーレイ（モバイルのみ） */}
       {isOpen && (

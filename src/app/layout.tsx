@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import QueryProvider from "@/providers/query-provider";
+import { SidebarProvider } from "@/contexts/SidebarContext";
+import { SessionProvider } from "next-auth/react";
 import Header from "@/components/Header";
 import Sidebar from "@/components/sidebar/Sidebar";
 
@@ -30,11 +32,15 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Header />
-        <Sidebar />
-        <div className="pt-16 md:ml-64">
-          <QueryProvider>{children}</QueryProvider>
-        </div>
+        <SessionProvider>
+          <SidebarProvider>
+            <Header />
+            <Sidebar />
+            <div className="pt-16 md:ml-64">
+              <QueryProvider>{children}</QueryProvider>
+            </div>
+          </SidebarProvider>
+        </SessionProvider>
       </body>
     </html>
   );
