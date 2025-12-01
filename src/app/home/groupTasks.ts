@@ -23,11 +23,12 @@ const priorityWeight = {
   後回し: 1,
 };
 
-// タスク種類の重み（15分タスク > 依頼準備 > 一般）
+// タスク種類の重み（15分タスク > 依頼準備 > 作業見積 > 一般）
 const typeWeight = {
   "15分タスク": 0,
   依頼準備: 1,
-  一般: 2,
+  作業見積: 2,
+  一般: 3,
 };
 
 export function groupTasksByDate(tasks: Task[]): GroupedTasks[] {

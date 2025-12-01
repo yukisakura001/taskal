@@ -54,6 +54,7 @@ const cardHoverColors = {
 const typeColors = {
   一般: "bg-gray-100 text-gray-600",
   依頼準備: "bg-purple-100 text-purple-600",
+  作業見積: "bg-teal-100 text-teal-600",
   "15分タスク": "bg-orange-100 text-orange-600",
 };
 

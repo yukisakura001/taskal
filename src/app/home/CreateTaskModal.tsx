@@ -226,6 +226,7 @@ export default function CreateTaskModal({
                 <SelectContent className="bg-white">
                   <SelectItem value="一般">一般</SelectItem>
                   <SelectItem value="依頼準備">依頼準備</SelectItem>
+                  <SelectItem value="作業見積">作業見積</SelectItem>
                   <SelectItem value="15分タスク">15分タスク</SelectItem>
                 </SelectContent>
               </Select>
