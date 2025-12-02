@@ -155,7 +155,7 @@ export default function EditTaskModal({
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label>期限</Label>
               <Input
@@ -197,7 +197,7 @@ export default function EditTaskModal({
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <Label>ステータス</Label>
               <Select
