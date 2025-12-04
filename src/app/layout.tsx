@@ -37,6 +37,9 @@ export default function RootLayout({
             <Header />
             <Sidebar />
             <div className="pt-16 md:ml-64">
+              <link rel="manifest" href="/manifest.json" />
+              <link rel="apple-touch-icon" href="/icon.png"></link>
+              <meta name="theme-color" content="#b8e986" />
               <QueryProvider>{children}</QueryProvider>
             </div>
           </SidebarProvider>
